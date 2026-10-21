@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>钢材表面缺陷检测</title>
+
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #243447;
+            background: #f4f7fb;
+        }
+
+        main {
+            padding: 28px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px #00000012;
+        }
+
+        h1 { color: #1f4e79; }
+        .upload-box {
+            margin: 24px 0;
+            padding: 20px;
+            border: 1px solid #d4dde8;
+            border-radius: 8px;
+        }
+
+        input, button { margin-top: 12px; }
+        button {
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 6px;
+            color: white;
+            background: #1f6feb;
+            cursor: pointer;
+        }
+
+        button:hover { background: #185abc; }
+        .error {
+            margin: 18px 0;
+            padding: 12px;
+            color: #8a1c1c;
+            background: #fff0f0;
+            border-radius: 6px;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border: 1px solid #d4dde8;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 18px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #d4dde8;
+            text-align: left;
+        }
+
+        th { background: #edf3f9; }
+        .hint { color: #617386; font-size: 14px; }
+    </style>
+</head>
+
+<body>
+<main>
+    <h1>钢材表面缺陷检测</h1>
+    <p>上传一张钢材表面图片，模型会尝试识别缺陷类别并标出位置。</p>
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="upload-box">
+            <label for="image"><strong>选择图片</strong></label><br>
+            <input
+                id="image"
+                name="image"
+                type="file"
+                accept=".jpg,.jpeg,.png,.bmp"
+                required
+            >
+
+            <p>
+                <label for="confidence">
+                    置信度阈值：
+                    <strong id="confidence-value">{{ "%.2f"|format(confidence) }}</strong>
+                </label><br>
+                <input
+                    id="confidence"
+                    name="confidence"
+                    type="range"
+                    min="0.05"
+                    max="0.90"
+                    step="0.05"
+                    value="{{ confidence }}"
+                >
+            </p>
+
+            <button type="submit">开始检测</button>
+            <p class="hint">支持 JPG、JPEG、PNG、BMP 图片。</p>
+        </div>
+    </form>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if result_image %}
+        <h2>检测结果</h2>
+        <p>图片中的框标出了模型检测到的缺陷。</p>
+        <img
+            class="result-image"
+            src="{{ url_for('static', filename='results/' ~ result_image) }}"
+            alt="带缺陷检测框的结果图片"
+        >
+
+        {% if detections %}
+            <h3>检测到的目标</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>缺陷类别</th>
+                        <th>置信度</th>
+                        <th>边界框坐标（左上 x、y，右下 x、y）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in detections %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.class_name }}</td>
+                            <td>{{ "%.1f"|format(item.confidence * 100) }}%</td>
+                            <td>{{ item.box }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>当前阈值下没有检测到目标。可以尝试降低置信度阈值后重新检测。</p>
+        {% endif %}
+    {% endif %}
+</main>
+
+<script>
+    const slider = document.getElementById("confidence");
+    const valueText = document.getElementById("confidence-value");
+
+    slider.addEventListener("input", () => {
+        valueText.textContent = Number(slider.value).toFixed(2);
+    });
+</script>
+</body>
+</html>

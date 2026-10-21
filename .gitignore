@@ -1,0 +1,21 @@
+# Python 虚拟环境和缓存
+.venv/
+__pycache__/
+*.py[cod]
+
+# 原始数据和生成的数据副本
+raw/
+downloads/
+dataset/images/
+dataset/labels/
+dataset/*.cache
+
+# 训练过程与临时预测结果
+runs/
+static/results/
+
+# 初始预训练权重
+yolo26n.pt
+weights/yolo26n.pt
+
+requirements-full.txt
